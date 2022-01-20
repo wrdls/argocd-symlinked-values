@@ -1,0 +1,26 @@
+{{- $valuesFile := print "values/nginx/" .Values.global.env ".yaml" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx
+  project: {{ .Values.global.env }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    chart: nginx
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: "9.7.1"
+    helm:
+      values: |
+        global: {{- toYaml .Values.global | nindent 10 }}
+        {{- $.Files.Get $valuesFile | nindent 8 }}
